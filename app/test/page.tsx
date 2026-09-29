@@ -8,9 +8,11 @@ export default function TestPage() {
   const [essay, setEssay] = useState("");
   const [output, setOutput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleSubmit() {
     setOutput("");
+    setError("");
     setLoading(true);
 
     const res = await fetch("/api/feedback", {
@@ -18,6 +20,13 @@ export default function TestPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ essay }),
     });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      setError(data?.error ?? "요청에 실패했습니다.");
+      setLoading(false);
+      return;
+    }
 
     const reader = res.body!.getReader();
     const decoder = new TextDecoder();
@@ -42,6 +51,7 @@ export default function TestPage() {
       <Button onClick={handleSubmit} disabled={loading || !essay}>
         {loading ? "첨삭 중..." : "첨삭받기"}
       </Button>
+      {error && <p className="text-sm text-red-600">{error}</p>}
       <pre className="whitespace-pre-wrap text-sm">{output}</pre>
     </main>
   );
